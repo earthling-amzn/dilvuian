@@ -5,20 +5,32 @@
  */
 package com.amazon.corretto.benchmark.diluvian;
 
-public class Diluvian {
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+
+@Command
+public class Diluvian implements Runnable {
 
   static class TreeNode {
     public TreeNode left, right;
     public int val;
   }
 
-  static int cache_size;
-  static int reps;
-  static int tree_height=16;
+  @CommandLine.Option(names = {"-s", "--size"},
+                      description = "The size of the cache")
+  int cacheSize = 100;
 
-  private static TreeNode[] trees;
+  @CommandLine.Option(names = {"-r", "--repetitions"},
+                      description = "Total number of cache entries to update")
+  int reps = 100;
 
-  private static int getIndex(int i) {return i % cache_size;}
+  @CommandLine.Option(names = {"-h", "--height"},
+                      description = "Height of the tree to create for each entry.")
+  int treeHeight = 16;
+
+  private TreeNode[] trees;
+
+  private int getIndex(int i) {return i % cacheSize;}
 
   private static TreeNode makeTree(int h) {
     if (h == 0) { return null;}
@@ -32,20 +44,20 @@ public class Diluvian {
   }
 
   public static void main(String[] args) {
-    if (args.length != 2) {
-      System.err.println("LRU requires args: cache_size reps");
-      return;
-    }
-    cache_size = Integer.parseInt(args[0]);
-    reps = Integer.parseInt(args[1]) * cache_size;
-    trees = new TreeNode[cache_size];
+    new CommandLine(new Diluvian()).execute(args);
+  }
+
+  @Override
+  public void run() {
+
+    trees = new TreeNode[cacheSize];
 
     long start = System.currentTimeMillis();
     for (int i = 0; i < reps; i++)
-      trees[getIndex(i)] = makeTree(tree_height);
+      trees[getIndex(i)] = makeTree(treeHeight);
     long end = System.currentTimeMillis();
     long ms = end - start;
 
-    System.out.println("Took " + ms + "ms to allocate " + reps + " trees in a cache of " + cache_size);
+    System.out.println("Took " + ms + "ms to allocate " + reps + " trees in a cache of " + cacheSize);
   }
 }
