@@ -83,7 +83,8 @@ public class Diluvian implements Runnable {
     trees = new TreeNode[cacheSize];
 
     long start = System.currentTimeMillis();
-    try (ExecutorService executor = Executors.newFixedThreadPool(threads, Diluvian::threadFactory)) {
+    try {
+      ExecutorService executor = Executors.newFixedThreadPool(threads, Diluvian::threadFactory);
       for (int i = 0; i < threads; i++) {
         executor.execute(this::updateCache);
       }
